@@ -1,6 +1,8 @@
 extends Sprite2D
 class_name PlayerTexture
 
+signal game_over
+
 var suffix: String = "_right"
 var normal_attack: bool = false
 var shield_off: bool = true
@@ -12,9 +14,14 @@ var crouching_off: bool = false
 @export var player: NodePath
 @onready var class_player = get_node(player) as CharacterBody2D
 
+@export var collision: NodePath
+@onready var attack_collision = get_node(collision) as CollisionShape2D
+
 func animate(direction: Vector2) -> void:
 	verify_position(direction)
-	if class_player.attacking or class_player.defending or class_player.crouching:
+	if class_player.on_hit or class_player.dead:
+		hit_behavior()
+	elif class_player.attacking or class_player.defending or class_player.crouching:
 		action_behavior()
 	elif direction.y != 0:
 		vertical_behavior(direction)
@@ -31,6 +38,14 @@ func verify_position(direction: Vector2) -> void:
 	elif direction.x < 0:
 		suffix = "_left"
 		flip_h = true
+
+func hit_behavior() -> void:
+	class_player.set_physics_process(false)
+	attack_collision.set_deferred("disabled", true)
+	if class_player.dead == true:
+		animation_player.play('dead')
+	elif class_player.on_hit == true:
+		animation_player.play('hit')
 
 func action_behavior() -> void:
 	if class_player.attacking and normal_attack:
@@ -76,3 +91,15 @@ func on_animation_finished(anim_name: String):
 		"attack_right":
 			normal_attack = false
 			class_player.attacking = false
+		"hit":
+			class_player.on_hit = false
+			class_player.set_physics_process(true)
+			
+			if class_player.defending == true:
+				animation_player.play("shield")
+				
+			if class_player.crouching == true:
+				animation_player.play("crouch")
+		"dead":
+			emit_signal("game_over")
+		

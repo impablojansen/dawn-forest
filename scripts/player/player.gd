@@ -4,6 +4,7 @@ class_name Player
 @onready var player_sprite: Sprite2D = get_node("Texture")
 @onready var wall_ray: RayCast2D = get_node("WallRay")
 @onready var collision2D: CollisionShape2D = get_node("Collision")
+@onready var stats: PlayerStats = get_node("Stats")
 
 const SPEED = 75.0
 const JUMP_VELOCITY = -200.0
@@ -11,6 +12,9 @@ const FLOOR_NORMAL = Vector2.UP
 const wall_jump_speed = 30.0
 const wall_impulse_speed = -200.0
 
+
+var dead: bool = false
+var on_hit: bool = false
 var landing: bool = false
 var attacking: bool = false
 var defending: bool = false
@@ -64,12 +68,12 @@ func _physics_process(delta: float):
 	
 	var collision = move_and_collide(velocity * delta)
 	if collision:
-		# If there is a collision, adjust the velocity so that the character does not move into the collider.
 		var slide = get_slide_collision(-1)
 		if slide:
 			velocity = velocity.slide(slide.normal)
 	move_and_slide()
 	player_sprite.animate(velocity)
+	
 	
 func actions_env() -> void:
 	attack()
@@ -95,10 +99,12 @@ func defense() -> void:
 	if Input.is_action_pressed("defend") and is_on_floor() and not crouching:
 		defending = true
 		can_track_input = false
+		stats.shielding = true
 	elif not crouching:
 		defending = false
 		can_track_input = true
 		player_sprite.shield_off = true
+		stats.shielding = false
 		
 func next_to_wall() -> bool:
 	if wall_ray.is_colliding() and not is_on_floor():

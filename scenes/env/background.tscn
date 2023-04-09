@@ -46,5 +46,4 @@ offset_bottom = 40.0
 texture = ExtResource("4_555lc")
 
 [node name="CanvasModulate" type="CanvasModulate" parent="."]
-visible = false
 color = Color(0.101961, 0.0980392, 0.101961, 1)
